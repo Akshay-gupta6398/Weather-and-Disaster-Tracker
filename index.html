@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .weather-info {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+   <body>
+    <h1>Weather & Disaster Alert </h1>
+    <input type="text" id="location" placeholder="Enter location">
+    <br>
+    <button onclick="getWeather()">Check Weather</button>
+    <button onclick="getEarthquakeData()">Recent Earthquakes</button>
+    <div class="weather-info" id="weather-info"></div>
+    <div class="weather-info" id="earthquake-info"></div>
+</body>
+
+
+    <script>
+        function getWeather() {
+            const location = document.getElementById('location').value;
+            if (!location) {
+                alert('Please enter a location');
+                return;
+            }
+            
+            const apiKey = 'a63c95f86f5a4014b2451137251303';
+            const weatherUrl = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=yes`;
+            
+            fetch(weatherUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const temp = data.current.temp_c;
+                    const wind = data.current.wind_kph;
+                    const humidity = data.current.humidity;
+                    const rain = data.current.precip_mm;
+                    const condition = data.current.condition.text;
+                    const emoji = getWeatherEmoji(condition);
+                    const townPhenomena = getTownSpecificWeather(location);
+
+                    document.getElementById('weather-info').innerHTML = `
+                        <p>Temperature: ${temp}°C</p>
+                        <p>Wind Speed: ${wind} km/h</p>
+                        <p>Humidity: ${humidity}%</p>
+                        <p>Chance of Rain: ${rain} mm</p>
+                        <p>Condition: ${condition} ${emoji}</p>
+                        <p>Special Weather Phenomena: ${townPhenomena}</p>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                    alert('Could not retrieve weather data');
+                });
+
+            getEarthquakeData();
+            function getEarthquakeData() {
+    const url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_hour.geojson';
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const quakes = data.features.map(q => {
+                const place = q.properties.place;
+                const mag = q.properties.mag;
+                const time = new Date(q.properties.time).toLocaleString();
+                return `<p>🌍 ${place} | Magnitude: ${mag} | Time: ${time}</p>`;
+            }).join('');
+
+            document.getElementById('earthquake-info').innerHTML = `
+                <h3>Recent Earthquakes:</h3>
+                ${quakes || '<p>No significant earthquakes in the last hour.</p>'}
+            `;
+        })
+        .catch(error => {
+            console.error('Error fetching earthquake data:', error);
+            alert('Could not retrieve earthquake data');
+        });
+}
+
+        }
+
+        function getWeatherEmoji(condition) {
+            if (condition.includes("Sunny")) return "☀️";
+            if (condition.includes("Cloud")) return "☁️";
+            if (condition.includes("Rain")) return "🌧️";
+            if (condition.includes("Snow")) return "❄️";
+            if (condition.includes("Storm")) return "⛈️";
+            return "🌍";
+        }
+
+        function getTownSpecificWeather(location) {
+            const phenomena = {
+                "San Francisco": "Frequent coastal fog 🌫️",
+                "Chicago": "Strong wind gusts 💨",
+                "Mumbai": "High humidity and monsoon rains 🌧️",
+                "Tokyo": "Typhoon season in summer 🌀",
+            };
+            return phenomena[location] || "No specific phenomena recorded.";
+        }
+
+        function getEarthquakeData() {
+            const earthquakeUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson';
+            fetch(earthquakeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.features.length > 0) {
+                        const latestQuake = data.features[0].properties;
+                        const place = latestQuake.place;
+                        const magnitude = latestQuake.mag;
+                        document.getElementById('earthquake-info').innerHTML = `
+                            <p><strong>Recent Earthquake Alert:</strong></p>
+                            <p>Location: ${place}</p>
+                            <p>Magnitude: ${magnitude}</p>
+                        `;
+                    } else {
+                        document.getElementById('earthquake-info').innerHTML = "<p>No recent earthquakes detected.</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching earthquake data:', error);
+                });
+        }
+        if (condition.toLowerCase().includes("flood")) {
+    floodRiskLevel = "High";
+    document.getElementById('weather-info').innerHTML += `<p style="color:red;">⚠️ Flood Risk: ${floodRiskLevel}</p>`;
+}
+
+    </script>
+</body>
+</html>
